@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "database": "myblog",
+            "driver": "MySQL",
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "name": "Masaaki",
+            "password": "liukai19950313",
+            "port": 3306,
+            "previewLimit": 50,
+            "server": "localhost",
+            "username": "root"
+        }
+    ]
+}

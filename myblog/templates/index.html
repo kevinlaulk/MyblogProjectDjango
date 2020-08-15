@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/vue.js"></script>
+    <script src="/static/js/axios.js"></script>
+</head>
+
+<body>
+    <div id="home">
+        <div class="header">
+            <!-- from views -->
+            <h1>{{ siteinfo.title }}</h1>
+            <img src="/upload/{{ siteinfo.logo }}" alt="">
+        </div>
+        <hr />
+        <div class="content">
+            <div class="menu">
+
+                <div v-if="item.id==choosed" v-for="item in classes" class="item" style="background:#777; 
+                color:#fff">
+                    <!-- <a href="/classes/?id={{item.id }}">[[item.text]]</a> -->
+                    <a>[[item.text]]</a>
+                </div>
+                <div v-else @click="chooseClass(item.id)" class="item">
+                    <a>[[item.text]]</a>
+                </div>
+
+            </div>
+            <div v-if="item.id==choosed" v-for="item in classes" class="userlist">
+                <div class="userlisttitle">
+                    <p>[[item.text]]</p>
+                    <hr>
+                </div>
+
+                <div v-if="item.userlist.length>0" v-for="user in item.userlist" class="user">
+                    <img src="/upload/UserInfo/70511410_p0.jpg" alt="">
+                    <p>[[user.nickname]]</p>
+                </div>
+
+                <p v-else>没有用户</p>
+
+            </div>
+        </div>
+        <hr />
+        <div class="foot">
+            Copyright © 2020 Masaaki
+        </div>
+    </div>
+    <script>
+        new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#home', //id
+            data: {
+                choosed: 1, //定义无法选中的数据，初始化数字为默认页
+                classes: [], //定义保存数据的数组
+            },
+            mounted() {
+                this.getData()
+            },
+            methods: {
+                getData() {
+                    axios({
+                        url: '/api/', //通过axios获取api发送的json数据
+                        type: 'json',
+                        method: 'get',
+                    }).then((res) => {
+                        console.log(res.data.classes)
+                        this.classes = res.data.classes //通过this指针指到Vue对象的保存数据的数组
+                    })
+                },
+                chooseClass(itemid) { //自定义函数
+                    // console.log(itemid)
+                    this.choosed = itemid
+                }
+            }
+        })
+    </script>
+
+</body>
+
+</html>
