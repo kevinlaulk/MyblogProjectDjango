@@ -43,4 +43,36 @@ def api_test(request):
 
 @api_view(['GET'])
 def getMenuList(request):
-    return Response('ok')
+    allClasses = Classes.objects.all()
+    
+    # 整理数据为json
+    data = []
+    for c in allClasses:
+        # 设计单条数据的结构
+        data_item = {
+            'id': c.id,
+            'text': c.text,
+        }
+        data.append(data_item)
+    return Response(data)
+
+@api_view(['GET'])
+def getUserList(request):
+    # 获得前端发送的id开始查找数据库
+    menuId = request.GET['id'] # 对应vue/UserList.vue中的params:{id}
+    print(menuId)
+    menu = Classes.objects.get(id=menuId)
+    print(menu)
+    UserList = UserInfo.objects.filter(belong=menu)
+    print(UserList)
+    
+    #开始整理数据列表准备发送给前端
+    data = []
+    for user in UserList:
+        data_item = {
+            'id':user.id,
+            'headImg':str(user.HeadImg),
+            'nickName':user.NickName,
+        }
+        data.append(data_item)
+    return Response(data)
