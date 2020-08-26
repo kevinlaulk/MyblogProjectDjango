@@ -1,8 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from myblog.models import Classes, UserInfo
+from myblog.models import SiteInfo, Classes, UserInfo
 # 自己写的json序列化工具
-from myblog.toJson import Classes_data, UserInfo_data
+from myblog.toJson import  Classes_data, UserInfo_data
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import check_password, make_password
+from rest_framework.authtoken.models import Token
 import json
 
 @api_view(['GET','POST'])
@@ -44,16 +48,24 @@ def api_test(request):
 @api_view(['GET'])
 def getMenuList(request):
     allClasses = Classes.objects.all()
-    
+    siteinfo = SiteInfo.objects.get(id = 1)
+    siteinfo_data = {
+        'sitename': siteinfo.title,
+        'logo':'http://127.0.0.1:9000/upload/'+str(siteinfo.logo)
+    }
     # 整理数据为json
-    data = []
+    menu_data = []
     for c in allClasses:
         # 设计单条数据的结构
         data_item = {
             'id': c.id,
             'text': c.text,
         }
-        data.append(data_item)
+        menu_data.append(data_item)
+    data = {
+        'menu_data':menu_data,
+        'siteinfo':siteinfo_data
+    }
     return Response(data)
 
 @api_view(['GET'])
@@ -75,4 +87,65 @@ def getUserList(request):
             'nickName':user.NickName,
         }
         data.append(data_item)
+    return Response(data)
+
+@api_view(['POST'])
+def toLogin(request):
+    print(request.POST)
+    username = request.POST['username']
+    password = request.POST['password']
+    # print(username, password)
+    # 查询数据库
+    user = User.objects.filter(username=username)
+    if len(user)>0:
+        # 未通过是none
+        auth_user = authenticate(username=username, password=password)
+        if auth_user:
+            token = Token.objects.update_or_create(user = user[0])
+            token = Token.objects.get(user=user[0])
+            print(token.key)
+            data = {
+                'token': token.key
+            }
+            return Response(data)
+        else:
+            return Response('pwderr')
+    else:
+        return Response('none') # 对应为axios/res/data数据
+
+@api_view(['POST'])
+def toRegister(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    password2 = request.POST['password2']
+    print(username, password, password2)
+
+    # 判断用户是否存在
+    user = User.objects.filter(username = username)
+    if len(user)>0:
+        return Response('false_same')
+    else:
+        newPassword = make_password(password, username)
+        newUser = User(username=username, password=newPassword)
+        newUser.save()
+    return Response('ok')
+
+@api_view(['POST','PUT'])
+def uploadLogo(request):
+    if request.method == 'PUT':
+        sitename = request.POST['sitename']
+        old_info = SiteInfo.objects.get(id=1)
+        old_info.title = sitename
+        new_info = SiteInfo.objects.get(id=2)
+        old_info.logo = new_info.logo
+        old_info.save()
+        return Response('ok')
+    img = request.FILES['logo']
+    # print(img)
+    test_siteLogo = SiteInfo.objects.get(id=2)
+    test_siteLogo.logo = img
+    test_siteLogo.save()
+    data = {
+        'img': str(test_siteLogo.logo)
+    }
     return Response(data)
